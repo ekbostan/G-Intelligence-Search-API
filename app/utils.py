@@ -100,17 +100,25 @@ def find_nearest_station(location, stations, memcached_client):
     else:
         return None
 
-def get_google_maps_directions(start, end, mode='walking'):
+def get_google_maps_directions(start, end, mode='walking', memcached_client=None):
     """
-    Get directions from Google Maps Directions API.
-    
+    Get directions from Google Maps Directions API and cache the result.
+
     :param start: Tuple (latitude, longitude) of the start location.
     :param end: Tuple (latitude, longitude) of the end location.
     :param mode: Mode of transportation, e.g., 'walking', 'driving', 'transit'.
+    :param memcached_client: Optional Memcached client for caching.
     :return: JSON response from Google Maps API with directions.
     """
     start_coords = f"{start[0]},{start[1]}"
     end_coords = f"{end['geometry']['coordinates'][1]},{end['geometry']['coordinates'][0]}"
+    
+    directions_key = hashlib.sha256(f"{start_coords}_{end_coords}_{mode}".encode('utf-8')).hexdigest()
+    
+    if memcached_client:
+        cached_directions = memcached_client.get(directions_key)
+        if cached_directions:
+            return json.loads(cached_directions)
     
     directions_url = (
         f"https://maps.googleapis.com/maps/api/directions/json"
@@ -121,11 +129,61 @@ def get_google_maps_directions(start, end, mode='walking'):
     )
     
     response = requests.get(directions_url)
-    return response.json()
+    directions = response.json()
+
+    if memcached_client:
+        memcached_client.set(directions_key, json.dumps(directions), time=86400)
+    
+    return directions
 
 def setup_logging():
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=[
+            logging.FileHandler("app.log"),
+            logging.StreamHandler()
+        ]
     )
+
+    # Separate Uvicorn's logging to use a different format
+    uvicorn_log_config = {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "default": {
+                    "format": "%(asctime)s - %(levelname)s - %(message)s",
+                },
+                "uvicorn": {
+                    "format": "%(levelprefix)s %(message)s",
+                },
+            },
+            "handlers": {
+                "default": {
+                    "formatter": "default",
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                },
+                "file": {
+                    "formatter": "default",
+                    "class": "logging.FileHandler",
+                    "filename": "app.log",
+                },
+                "uvicorn": {
+                    "formatter": "uvicorn",
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                },
+            },
+            "loggers": {
+                "": {"handlers": ["default", "file"], "level": "INFO"},
+                "uvicorn": {"handlers": ["uvicorn", "file"], "level": "INFO", "propagate": False},
+                "uvicorn.error": {"handlers": ["default", "file"], "level": "INFO", "propagate": True},
+                "uvicorn.access": {"handlers": ["default", "file"], "level": "INFO", "propagate": False},
+            },
+        }
+
+    logging.config.dictConfig(uvicorn_log_config)
+
+setup_logging()
