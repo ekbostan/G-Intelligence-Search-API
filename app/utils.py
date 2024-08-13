@@ -5,10 +5,10 @@ import json
 import os
 import requests
 from dotenv import load_dotenv
+from fastapi import FastAPI, Request, HTTPException, Depends
 
 # Load environment variables from .env file
 load_dotenv()
-
 
 def load_kml_data(filepath):
     stations = []
@@ -57,16 +57,14 @@ def find_nearest_station(location, stations, memcached_client):
                     "distance_miles": min_distance
                 }
             }
-            #Serve the requested data from the cache reducing the load on the server
-            memcached_client.set(location_key, json.dumps(result),time=86400)
+            # Serve the requested data from the cache reducing the load on the server
+            memcached_client.set(location_key, json.dumps(result), time=86400)
 
             return result
         finally:
-
             memcached_client.delete(lock_key)
     else:
         return None
-
 
 def get_google_maps_directions(start, end, mode='walking'):
     """
@@ -90,3 +88,4 @@ def get_google_maps_directions(start, end, mode='walking'):
     
     response = requests.get(directions_url)
     return response.json()
+
