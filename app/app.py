@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import bmemcached
 from dotenv import load_dotenv
 import os
 import json
@@ -13,6 +12,7 @@ from models import LocationRequest
 import logging
 from cache import memcached_client
 import uvicorn
+from middlewares import limit_request_size ,log_requests
 
 load_dotenv()
 
@@ -37,14 +37,8 @@ app.add_middleware(
 
 
 app.add_middleware(SecurityHeadersMiddleware)
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger = logging.getLogger("uvicorn.access")
-    logger.info(f"Request: {request.method} {request.url} Headers: {request.headers}")
-    response = await call_next(request)
-    logger.info(f"Response status: {response.status_code}")
-    return response
+app.middleware("http")(limit_request_size)  
+app.middleware("http")(log_requests) 
 
 # Endpoint to find the nearest station
 @app.post("/nearest_station", dependencies=[Depends(authenticate)])
