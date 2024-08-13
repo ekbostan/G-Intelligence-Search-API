@@ -12,6 +12,7 @@ from security import authenticate, SecurityHeadersMiddleware
 from models import LocationRequest
 import logging
 from cache import memcached_client
+import uvicorn
 
 load_dotenv()
 
@@ -62,7 +63,7 @@ async def nearest_station(request: LocationRequest):
             raise HTTPException(status_code=429, detail="Another process is handling this request, please try again shortly.")
 
         # Cache the result using `run_in_threadpool`
-        await run_in_threadpool(app.state.memcached_client.set, location_key, json.dumps(nearest_station_geojson), 3600)
+        await run_in_threadpool(app.state.memcached_client.set, location_key, json.dumps(nearest_station_geojson), 00)
 
     response_data = {
         "status": "success",
@@ -77,5 +78,4 @@ async def nearest_station(request: LocationRequest):
     return JSONResponse(content=response_data)
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

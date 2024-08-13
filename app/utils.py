@@ -5,9 +5,7 @@ import json
 import os
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException, Depends
 
-# Load environment variables from .env file
 load_dotenv()
 
 def load_kml_data(filepath):
