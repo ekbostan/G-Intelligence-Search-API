@@ -10,22 +10,20 @@ from utils import find_nearest_station, load_kml_data, get_google_maps_direction
 from starlette.concurrency import run_in_threadpool
 from security import authenticate, SecurityHeadersMiddleware
 from models import LocationRequest
+import logging
+from cache import memcached_client
 
 load_dotenv()
 
 # Load KML data
 stations = load_kml_data('../SEPTARegionalRailStations2016/doc.kml')
 
-# Initialize Memcached client with SASL authentication
-memcached_client = bmemcached.Client(
-    f"{os.getenv('MEMCACHED_HOST')}:{os.getenv('MEMCACHED_PORT')}",
-    username=os.getenv('MEMCACHED_USERNAME'),
-    password=os.getenv('MEMCACHED_PASSWORD')
-)
 
 app = FastAPI()
 
+logging.basicConfig(level=logging.INFO)
 app.state.memcached_client = memcached_client
+
 
 # CORS configuration
 app.add_middleware(
@@ -38,6 +36,14 @@ app.add_middleware(
 
 
 app.add_middleware(SecurityHeadersMiddleware)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger = logging.getLogger("uvicorn.access")
+    logger.info(f"Request: {request.method} {request.url} Headers: {request.headers}")
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    return response
 
 # Endpoint to find the nearest station
 @app.post("/nearest_station", dependencies=[Depends(authenticate)])
