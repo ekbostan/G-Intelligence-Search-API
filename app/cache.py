@@ -5,9 +5,7 @@ from utils import setup_logging
 import logging
 
 load_dotenv()
-
 setup_logging
-
 
 try:
     memcached_client = bmemcached.Client(

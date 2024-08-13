@@ -1,38 +1,41 @@
-from fastapi import FastAPI, HTTPException, Depends,status
+# Standard library imports
+import json
+import hashlib
+
+# Third-party imports
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import json
-import hashlib
-from utils import find_nearest_station, get_google_maps_directions, load_all_stations
 from starlette.concurrency import run_in_threadpool
+import logging
+import uvicorn
+
+# Local application imports
+from utils import find_nearest_station, get_google_maps_directions, load_all_stations, setup_logging
 from security import authenticate, SecurityHeadersMiddleware
 from models import LocationRequest
-import logging
 from cache import memcached_client
-import uvicorn
-from middlewares import limit_request_size ,log_requests
-from utils import setup_logging
+from middlewares import limit_request_size, log_requests
+
 
 load_dotenv()
-
 setup_logging()
 
-
-# Load KML data
 try:
-    stations = load_all_stations('../SEPTARegionalRailStations2016/doc.kml', '../DCMetroStations/Metro_Stations_Regional.geojson')
+    stations = load_all_stations(
+        '../SEPTARegionalRailStations2016/doc.kml',
+        '../DCMetroStations/Metro_Stations_Regional.geojson'
+    )
 except Exception as e:
     logging.error(f"Failed to load station data: {e}")
     stations = []
 
+
 app = FastAPI()
 
-logging.basicConfig(level=logging.INFO)
+# Middleware setup
 app.state.memcached_client = memcached_client
-
-
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,17 +43,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 app.add_middleware(SecurityHeadersMiddleware)
-app.middleware("http")(limit_request_size)  
-app.middleware("http")(log_requests) 
+app.middleware("http")(limit_request_size)
+app.middleware("http")(log_requests)
 
-# Endpoint to find the nearest station
+
 @app.post("/nearest_station", dependencies=[Depends(authenticate)])
 async def nearest_station(request: LocationRequest):
     location = (request.latitude, request.longitude)
-    
     location_key = hashlib.sha256(json.dumps(location).encode('utf-8')).hexdigest()
 
     try:
@@ -68,6 +68,7 @@ async def nearest_station(request: LocationRequest):
                     detail="Another process is handling this request, please try again shortly."
                 )
 
+            # Cache the result 
             await run_in_threadpool(
                 app.state.memcached_client.set,
                 location_key,

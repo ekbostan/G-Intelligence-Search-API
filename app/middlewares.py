@@ -12,7 +12,7 @@ async def limit_request_size(request: Request, call_next):
 
     if content_length > max_request_size:
         raise HTTPException(status_code=413, detail="Request Entity Too Large")
-    
+
     response = await call_next(request)
     return response
 
