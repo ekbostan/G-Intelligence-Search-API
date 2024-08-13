@@ -8,18 +8,53 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def load_all_stations(septa_kml_path, dc_metro_geojson_path):
+    try:
+        septa_stations = load_kml_data(septa_kml_path)
+        dc_metro_stations = load_geojson_data(dc_metro_geojson_path)
+        return septa_stations + dc_metro_stations
+    except Exception as e:
+        print(f"Error loading stations: {e}")
+        return []
+
 def load_kml_data(filepath):
     stations = []
-    with open(filepath) as f:
-        doc = parser.parse(f).getroot()
-        for placemark in doc.Document.Folder.Placemark:
-            name = placemark.name.text
-            coords = placemark.Point.coordinates.text.strip().split(',')
-            stations.append({
-                "name": name,
-                "longitude": float(coords[0]),
-                "latitude": float(coords[1])
-            })
+    try:
+        with open(filepath) as f:
+            doc = parser.parse(f).getroot()
+            for placemark in doc.Document.Folder.Placemark:
+                name = placemark.name.text
+                coords = placemark.Point.coordinates.text.strip().split(',')
+                stations.append({
+                    "name": name,
+                    "longitude": float(coords[0]),
+                    "latitude": float(coords[1])
+                })
+    except FileNotFoundError:
+        print(f"Error: KML file not found at {filepath}")
+    except Exception as e:
+        print(f"Error parsing KML file at {filepath}: {e}")
+    return stations
+
+def load_geojson_data(filepath):
+    stations = []
+    try:
+        with open(filepath, 'r') as f:
+            geojson = json.load(f)
+            for feature in geojson['features']:
+                coords = feature['geometry']['coordinates']
+                name = feature['properties']['NAME']
+                stations.append({
+                    "name": name,
+                    "longitude": coords[0],
+                    "latitude": coords[1]
+                })
+    except FileNotFoundError:
+        print(f"Error: GeoJSON file not found at {filepath}")
+    except json.JSONDecodeError:
+        print(f"Error decoding JSON from GeoJSON file at {filepath}")
+    except Exception as e:
+        print(f"Error parsing GeoJSON file at {filepath}: {e}")
     return stations
 
 def find_nearest_station(location, stations, memcached_client):
