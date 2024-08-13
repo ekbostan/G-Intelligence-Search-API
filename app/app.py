@@ -17,7 +17,12 @@ from middlewares import limit_request_size ,log_requests
 load_dotenv()
 
 # Load KML data
-stations = load_kml_data('../SEPTARegionalRailStations2016/doc.kml')
+septa_stations = load_kml_data('../SEPTARegionalRailStations2016/doc.kml')
+
+dc_metro_stations = load_kml_data('../DCMetroStations/doc.kml')
+
+stations = septa_stations + dc_metro_stations
+
 
 
 app = FastAPI()
