@@ -26,36 +26,46 @@ def load_kml_data(filepath):
 
 def find_nearest_station(location, stations, memcached_client):
     location_key = hashlib.md5(json.dumps(location).encode()).hexdigest()
+    lock_key = f"lock:{location_key}"
 
-    cached_result = memcached_client.get(location_key)
-    if cached_result:
-        return json.loads(cached_result)
+    # Acquire a lock
+    if memcached_client.add(lock_key, "locked", time=10):
+        try:
+            # Check the cache
+            cached_result = memcached_client.get(location_key)
+            if cached_result:
+                return json.loads(cached_result)
 
-    nearest_station = None
-    min_distance = float('inf')
-    for station in stations:
-        station_location = (station['latitude'], station['longitude'])
-        distance = geodesic(location, station_location).miles
-        if distance < min_distance:
-            min_distance = distance
-            nearest_station = station
+            # Calculate nearest station
+            nearest_station = None
+            min_distance = float('inf')
+            for station in stations:
+                station_location = (station['latitude'], station['longitude'])
+                distance = geodesic(location, station_location).miles
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_station = station
 
-    result = {
-        "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [nearest_station['longitude'], nearest_station['latitude']]
-        },
-        "properties": {
-            "name": nearest_station['name'],
-            "distance_miles": min_distance
-        }
-    }
+            result = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [nearest_station['longitude'], nearest_station['latitude']]
+                },
+                "properties": {
+                    "name": nearest_station['name'],
+                    "distance_miles": min_distance
+                }
+            }
 
-    # Store the result in Memcached
-    memcached_client.set(location_key, json.dumps(result))
+            memcached_client.set(location_key, json.dumps(result))
 
-    return result
+            return result
+        finally:
+
+            memcached_client.delete(lock_key)
+    else:
+        return None
 
 
 def get_google_maps_directions(start, end, mode='walking'):
