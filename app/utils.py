@@ -9,8 +9,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# In-memory cache
-cache = {}
 
 def load_kml_data(filepath):
     stations = []
@@ -26,13 +24,12 @@ def load_kml_data(filepath):
             })
     return stations
 
-def find_nearest_station(location, stations):
-    # Create a unique key for the location
+def find_nearest_station(location, stations, memcached_client):
     location_key = hashlib.md5(json.dumps(location).encode()).hexdigest()
 
-    # Check the in-memory cache
-    if location_key in cache:
-        return cache[location_key]
+    cached_result = memcached_client.get(location_key)
+    if cached_result:
+        return json.loads(cached_result)
 
     nearest_station = None
     min_distance = float('inf')
@@ -55,8 +52,8 @@ def find_nearest_station(location, stations):
         }
     }
 
-    # Cache the result
-    cache[location_key] = result
+    # Store the result in Memcached
+    memcached_client.set(location_key, json.dumps(result))
 
     return result
 

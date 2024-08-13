@@ -7,6 +7,12 @@ from flask_cors import CORS
 import requests
 from utils import find_nearest_station, load_kml_data, get_google_maps_directions
 from config import Config
+from dotenv import load_dotenv
+import os
+import bmemcached
+
+# Load environment variables
+load_dotenv()
 
 # Load KML data
 stations = load_kml_data('../SEPTARegionalRailStations2016/doc.kml')
@@ -16,10 +22,18 @@ app = Flask(__name__)
 CORS(app)  
 app.config.from_object(Config)
 
+# Initialize Memcached client with SASL authentication
+memcached_client = bmemcached.Client(
+    f"{os.getenv('MEMCACHED_HOST')}:{os.getenv('MEMCACHED_PORT')}",
+    username=os.getenv('MEMCACHED_USERNAME'),
+    password=os.getenv('MEMCACHED_PASSWORD')
+)
+
+app.memcached_client = memcached_client
+
 # Initialize the limiter
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 
-# JSON Schema for input validation
 request_schema = {
     'type': 'object',
     'properties': {
@@ -51,10 +65,11 @@ def nearest_station():
     data = request.json
     location = (data['latitude'], data['longitude'])
 
-    # Find the nearest station
-    nearest_station_geojson = find_nearest_station(location, stations)
+    nearest_station_geojson = find_nearest_station(location, stations, memcached_client)
 
-    # Initialize response data
+    if nearest_station_geojson is None:
+        return jsonify(success=False, message="Another process is handling this request, please try again shortly."), 429
+
     response_data = {
         "status": "success",
         "nearest_station": nearest_station_geojson,
@@ -68,15 +83,7 @@ def nearest_station():
     return jsonify(response_data), 200
 
 
-def get_walking_directions(start, end):
-    start_coords = f"{start[1]},{start[0]}"
-    end_coords = f"{end['geometry']['coordinates'][1]},{end['geometry']['coordinates'][0]}"
-    directions_url = f"https://api.mapbox.com/directions/v5/mapbox/walking/{start_coords};{end_coords}?access_token={app.config['MAPBOX_API_KEY']}"
-    response = requests.get(directions_url)
-    return response.json()
 
 if __name__ == '__main__':
     print("Starting Flask application...")
     app.run(debug=True)
-
-
