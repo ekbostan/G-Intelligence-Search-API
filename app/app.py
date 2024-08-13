@@ -12,8 +12,12 @@ import logging
 from cache import memcached_client
 import uvicorn
 from middlewares import limit_request_size ,log_requests
+from utils import setup_logging
 
 load_dotenv()
+
+setup_logging()
+
 
 # Load KML data
 try:

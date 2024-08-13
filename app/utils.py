@@ -5,6 +5,7 @@ import json
 import os
 import requests
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -122,3 +123,9 @@ def get_google_maps_directions(start, end, mode='walking'):
     response = requests.get(directions_url)
     return response.json()
 
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )

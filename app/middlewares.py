@@ -1,8 +1,10 @@
 # middlewares.py
 import os
 from fastapi import Request, HTTPException
+from utils import setup_logging
 import logging
 
+setup_logging()
 
 async def limit_request_size(request: Request, call_next):
     max_request_size = 1048576  # 1 MB
