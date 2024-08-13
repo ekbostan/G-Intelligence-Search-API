@@ -58,7 +58,7 @@ def find_nearest_station(location, stations, memcached_client):
                 }
             }
             #Serve the requested data from the cache reducing the load on the server
-            memcached_client.set(location_key, json.dumps(result), time=3600)
+            memcached_client.set(location_key, json.dumps(result),time=86400)
 
             return result
         finally:
