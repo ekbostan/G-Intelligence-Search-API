@@ -158,7 +158,7 @@ This API takes a geographical location and finds the nearest SEPTA Regional Rail
 
 - **Implementation**:
   - **Caching and Database**: Used distributed cache to handle high traffic and prevent multiple searches of the same location.
-  - **Load Balancing**: Implement load balancing stratgey mentioned above.
+  - **Load Balancing**: Ideally implement load balancing stratgey mentioned above.
   - **Asynchronous Processing**: Utilized FastAPI’s asynchronous capabilities to handle multiple requests effectively.
 
 ### 7. Protecting Against Malicious Users
@@ -172,7 +172,7 @@ This API takes a geographical location and finds the nearest SEPTA Regional Rail
 
 # Production Build Overview
 
-For the purposes of this application, I used an AWS EC2 `t2.micro` free tier instance with Docker and Docker Swarm. It provides a scalable, lightweight infrastructure for deploying and managing the API.
+For the purposes of this application and given the limit, I used an AWS EC2 `t2.micro` free tier instance with Docker and Docker Swarm. It provides a scalable, lightweight infrastructure for deploying and managing the API.
 
 ## Infrastructure Details
 
