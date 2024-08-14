@@ -169,3 +169,46 @@ This API takes a geographical location and finds the nearest SEPTA Regional Rail
   - **Input Validation**: Cleans and checks user inputs to prevent harmful data from getting through.
   - **Logging and Monitoring**: Tracks how the API is being used to catch any unusual activity.
   - **AWS Shield**: Provides DDoS protection to safeguard the API.
+
+# Production Build Overview
+
+For the purposes of this application, I used an AWS EC2 `t2.micro` free tier instance with Docker and Docker Swarm. It provides a scalable, lightweight infrastructure for deploying and managing the API.
+
+## Infrastructure Details
+
+- **Instance Type**: AWS EC2 `t2.micro`
+- **Orchestration**: Docker Swarm
+- **Containerization**: Docker
+- **Operating System**: Amazon Linux 2
+
+## Deployment Design
+
+- **Infrastructure**: 
+  - AWS EC2 `t2.micro`
+  - Amazon Linux 2
+  - Docker & Docker Swarm
+- **Load Balancing**: 
+  - Managed by Docker Swarm for even distribution across containers.
+- **Caching**: 
+  - Implemented using Memcached to reduce API load.
+- **Rate Limiting**: 
+  - Limits requests to prevent abuse.
+- **Environment Variables**: 
+  - Managed securely to protect sensitive data.
+- **Monitoring**: 
+  - Logs and metrics collected for usage and performance analysis.
+
+### Testing the Production Build
+
+- **API Endpoint**: Test with `curl`:
+  
+  ```bash
+  curl -X POST http://3.86.237.39:8000/nearest_station \
+  -H "Content-Type: application/json" \
+  -H "X-API-KEY: test_api_key_1" \
+  -d '{
+    "latitude": 38.826454124031571,
+    "longitude": -76.911466463474113,
+    "include_directions": false
+  }'
+
