@@ -58,7 +58,7 @@ def save_outliers_to_json(file_path, data):
         print(f"Error writing to file {file_path}: {e}")
 
 def main():
-    septa_stations = load_kml_data('../SEPTARegionalRailStations2016/doc.kml')
+    septa_stations = load_kml_data('./SEPTARegionalRailStations2016/doc.kml')
     dc_metro_stations = load_geojson_data('Metro_Stations_Regional.geojson')
 
     septa_outermost_stations = find_outermost_stations(septa_stations)

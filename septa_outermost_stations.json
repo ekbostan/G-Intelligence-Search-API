@@ -1,0 +1,22 @@
+{
+    "northernmost": {
+        "name": "Lansdale Doylestown Line",
+        "longitude": -75.13068421467905,
+        "latitude": 40.30619835631978
+    },
+    "southernmost": {
+        "name": "Wilmington Newark Line",
+        "longitude": -75.75257693355651,
+        "latitude": 39.67025467270703
+    },
+    "easternmost": {
+        "name": "Trenton Line",
+        "longitude": -74.75386903181736,
+        "latitude": 40.21852327735218
+    },
+    "westernmost": {
+        "name": "Paoli Thorndale Line",
+        "longitude": -75.76273281214327,
+        "latitude": 39.99269070499752
+    }
+}
