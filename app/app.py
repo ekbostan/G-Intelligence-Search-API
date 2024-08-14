@@ -35,15 +35,15 @@ setup_logging()
 
 try:
     septa_stations, dc_metro_stations = load_all_stations(
-        '../SEPTARegionalRailStations2016/doc.kml',
-        '../Metro_Stations_Regional.geojson'
+        '/app/SEPTARegionalRailStations2016/doc.kml',
+        '/app/Metro_Stations_Regional.geojson'
     )
 except Exception as e:
     logging.error(f"Failed to load station data: {e}")
-    septa_stations, dc_metro_stations = [], [] 
+    septa_stations, dc_metro_stations = [], []
 
-septa_outliers = load_outliers('../septa_outermost_stations.json')
-dc_metro_outliers = load_outliers('../dc_metro_outermost_stations.json')
+septa_outliers = load_outliers('/app/septa_outermost_stations.json')
+dc_metro_outliers = load_outliers('/app/dc_metro_outermost_stations.json')
 
 
 app = FastAPI()
