@@ -115,49 +115,47 @@ This API takes a geographical location and finds the nearest SEPTA Regional Rail
 
     - **Assumptions**:
 
-      - We anticipate around 3 million requests, with 90% occurring during peak hours.
-      - This translates to roughly 2.7 million requests during these periods.
-      - Each peak hour (3 hours in the morning and 3 hours in the evening) could see approximately 1.35 million requests.
+  - We anticipate around 3 million requests, with 90% occurring during peak hours.
+  - This translates to roughly 2.7 million requests during these periods.
+  - Each peak hour (3 hours in the morning and 3 hours in the evening) could see approximately 1.35 million requests.
 
-    - **Calculating Users**:
+- **Calculating Users**:
 
-      - Assuming each individual makes about 5 requests during their session:
-      - **Total Users**:
-        \[
-        \text{Total Users} = \frac{3,000,000 \text{ requests}}{5 \text{ requests/user}} \approx 600,000 \text{ users/day}
-        \]
+  - Assuming each individual makes about 5 requests during their session:
+    \[
+    \text{Total Users} = \frac{3,000,000 \text{ requests}}{5 \text{ requests/user}} \approx 600,000 \text{ users/day}
+    \]
 
-    - **Instance Handling Capacity**:
+- **Instance Handling Capacity**:
 
-      - A **t3.medium** instance can handle around 1000-2000 concurrent users.
-      - **Peak Requests (90%)**:
-        \[
-        \text{Peak Requests} = 3,000,000 \times 0.9 = 2,700,000 \text{ requests during peak hours}
-        \]
-      - **Concurrent Users at Peak (estimated)**:
-        \[
-        \text{Concurrent Users} = \frac{2,700,000 \text{ peak requests}}{3 \times 60 \times 60 \text{ seconds}} \approx 250 \text{ users at peak per second}
-        \]
-      - **Required Instances**:
-        \[
-        \text{Required Instances} = \frac{250 \text{ peak users per second}}{1000 \text{ concurrent users per instance}} \approx 1 \text{ to } 3 \text{ t3.medium instances needed during peak hours}
-        \]
+  - A t3.medium instance can handle around 1000-2000 concurrent users.
+  - **Peak Requests (90%)**:
+    \[
+    \text{Peak Requests} = 3,000,000 \times 0.9 = 2,700,000 \text{ requests during peak hours}
+    \]
+  - **Concurrent Users at Peak (estimated)**:
+    \[
+    \text{Concurrent Users} = \frac{2,700,000 \text{ peak requests}}{3 \times 60 \times 60 \text{ seconds}} \approx 250 \text{ users at peak per second}
+    \]
+  - **Required Instances**:
+    \[
+    \text{Required Instances} = \frac{250 \text{ peak users per second}}{1000 \text{ concurrent users per instance}} \approx 1 \text{ to } 3 \text{ t3.medium instances needed during peak hours}
+    \]
 
-    - **Cost Calculation**:
-      - Each **t3.medium** instance costs approximately **$0.0416 per hour**.
-      - During peak hours (6 hours a day), the cost per instance would be:
-        \[
-        \text{Daily Peak Hour Cost per Instance} = 0.0416 \times 6 = 0.2496 \text{ USD per instance per day}
-        \]
-      - With 3 instances during peak hours:
-        \[
-        \text{Total Daily Peak Hour Cost} = 0.2496 \times 2.5 = 0.624 \text{ USD per day}
-        \]
-      - Over a month (30 days), the peak hour cost would be:
-        \[
-        \text{Monthly Peak Hour Cost} = 0.624 \times 30 = 18.72 \text{ USD}
-        \]
-
+- **Cost Calculation**:
+  - Each t3.medium instance costs approximately $0.0416 per hour.
+  - During peak hours (6 hours a day), the cost per instance would be:
+    \[
+    \text{Daily Peak Hour Cost per Instance} = 0.0416 \times 6 = 0.2496 \text{ USD per instance per day}
+    \]
+  - With 3 instances during peak hours:
+    \[
+    \text{Total Daily Peak Hour Cost} = 0.2496 \times 3 = 0.7488 \text{ USD per day}
+    \]
+  - Over a month (30 days), the peak hour cost would be:
+    \[
+    \text{Monthly Peak Hour Cost} = 0.7488 \times 30 = 22.464 \text{ USD}
+    \]
   - **Monitoring**: I've also implemented a simple metric system that tracks cache hits, misses, and API calls. This system allows for testing and analyzing the effectiveness of the current caching strategy. By reviewing the ratio of cache hits to misses and the overall API call volume, we can identify opportunities to adjust and further optimize caching strategies.
 
 ### 5. Global Sensible Responses
