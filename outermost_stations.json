@@ -1,0 +1,22 @@
+{
+    "northernmost": {
+        "name": "Shady Grove",
+        "longitude": -77.16462967696448,
+        "latitude": 39.11993515031108
+    },
+    "southernmost": {
+        "name": "Franconia-Springfield",
+        "longitude": -77.16797250233967,
+        "latitude": 38.7665296467617
+    },
+    "easternmost": {
+        "name": "Downtown Largo",
+        "longitude": -76.84455387088464,
+        "latitude": 38.90060751653347
+    },
+    "westernmost": {
+        "name": "Ashburn",
+        "longitude": -77.49153943827612,
+        "latitude": 39.00529079281844
+    }
+}

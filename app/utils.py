@@ -190,3 +190,42 @@ def setup_logging():
     }
 
     logging.config.dictConfig(uvicorn_log_config)
+
+def load_outliers(file_path):
+    """
+    Load outliers (northernmost, southernmost, easternmost, westernmost stations) from a JSON file.
+    
+    :param file_path: The path to the JSON file containing outliers data.
+    :return: A dictionary with the outliers if successful, otherwise an empty dictionary.
+    """
+    try:
+        with open(file_path, 'r') as f:
+            outliers = json.load(f)
+        return outliers
+    except FileNotFoundError:
+        logging.error(f"Error: Outliers file not found at {file_path}")
+    except json.JSONDecodeError:
+        logging.error(f"Error decoding JSON from file at {file_path}")
+    except Exception as e:
+        logging.error(f"Unexpected error loading outliers from file: {e}")
+    
+    return {}
+
+
+def is_distant_location(location, outliers, threshold=200):
+    """
+    Determine if a location is too distant from the closest outlier station.
+    
+    :param location: Tuple of (latitude, longitude) for the location to check.
+    :param outliers: Dictionary of outlier stations (northernmost, southernmost, easternmost, westernmost).
+    :param threshold: Distance threshold in miles (default is 200 miles).
+    :return: (bool, str) A tuple indicating if the location is distant and the key of the closest outlier.
+    """
+    distances = {
+        "northernmost": geodesic(location, (outliers['northernmost']['latitude'], outliers['northernmost']['longitude'])).miles,
+        "southernmost": geodesic(location, (outliers['southernmost']['latitude'], outliers['southernmost']['longitude'])).miles,
+        "easternmost": geodesic(location, (outliers['easternmost']['latitude'], outliers['easternmost']['longitude'])).miles,
+        "westernmost": geodesic(location, (outliers['westernmost']['latitude'], outliers['westernmost']['longitude'])).miles,
+    }
+    closest_outlier = min(distances, key=distances.get)
+    return distances[closest_outlier] > threshold, closest_outlier
