@@ -17,8 +17,7 @@ from security import authenticate, SecurityHeadersMiddleware
 from models import LocationRequest
 from cache import memcached_client
 from middlewares import limit_request_size, log_requests
-from metrics import cache_hits, cache_misses, api_calls, successful_responses, failed_responses, log_metrics
-
+from metrics import metrics 
 
 load_dotenv()
 setup_logging()
@@ -31,7 +30,6 @@ try:
 except Exception as e:
     logging.error(f"Failed to load station data: {e}")
     stations = []
-
 
 app = FastAPI()
 
@@ -48,11 +46,10 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.middleware("http")(limit_request_size)
 app.middleware("http")(log_requests)
 
-
 @app.post("/nearest_station", dependencies=[Depends(authenticate)])
 async def nearest_station(request: LocationRequest):
-    global cache_hits, cache_misses, api_calls, successful_responses, failed_responses
-    api_calls += 1 
+
+    metrics.api_calls += 1 
     location = (request.latitude, request.longitude)
     location_key = hashlib.sha256(json.dumps(location).encode('utf-8')).hexdigest()
 
@@ -60,15 +57,16 @@ async def nearest_station(request: LocationRequest):
         # Try to fetch the result from the cache
         cached_result = await run_in_threadpool(app.state.memcached_client.get, location_key)
         if cached_result:
-            cache_hits += 1 
+            metrics.cache_hits += 1 
             nearest_station_geojson = json.loads(cached_result)
         else:
-            cache_misses += 1  
+            metrics.cache_misses += 1  
+
             # Find the nearest station
             nearest_station_geojson = find_nearest_station(location, stations, app.state.memcached_client)
 
             if nearest_station_geojson is None:
-                failed_responses += 1  # Increment failed response counter
+                metrics.failed_responses += 1  # Increment failed response counter
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     detail="Another process is handling this request, please try again shortly."
@@ -98,14 +96,14 @@ async def nearest_station(request: LocationRequest):
             )
             response_data["directions"] = directions
 
-        successful_responses += 1 
-        log_metrics()
+        metrics.successful_responses += 1 
+        metrics.log_metrics()
         return JSONResponse(content=response_data)
 
     except Exception as e:
         logging.error(f"Error processing nearest_station request: {e}")
-        failed_responses += 1 
-        log_metrics() 
+        metrics.failed_responses += 1 
+        metrics.log_metrics() 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing your request."

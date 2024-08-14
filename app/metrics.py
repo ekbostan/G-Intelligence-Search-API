@@ -1,17 +1,23 @@
-# metrics.py
 import logging
 
-cache_hits = 0
-cache_misses = 0
-api_calls = 0
-successful_responses = 0
-failed_responses = 0
+class Metrics:
+    _instance = None
 
-# Function to log metrics
-def log_metrics():
-    metrics_logger = logging.getLogger('metrics_logger')
-    metrics_logger.info(f"Cache Hits: {cache_hits}")
-    metrics_logger.info(f"Cache Misses: {cache_misses}")
-    metrics_logger.info(f"API Calls: {api_calls}")
-    metrics_logger.info(f"Successful Responses: {successful_responses}")
-    metrics_logger.info(f"Failed Responses: {failed_responses}")
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Metrics, cls).__new__(cls)
+            cls._instance.cache_hits = 0
+            cls._instance.cache_misses = 0
+            cls._instance.api_calls = 0
+            cls._instance.successful_responses = 0
+            cls._instance.failed_responses = 0
+        return cls._instance
+
+    def log_metrics(self):
+        logging.info(f"Logging Metrics - Cache Hits: {self.cache_hits}")
+        logging.info(f"Logging Metrics - Cache Misses: {self.cache_misses}")
+        logging.info(f"Logging Metrics - API Calls: {self.api_calls}")
+        logging.info(f"Logging Metrics - Successful Responses: {self.successful_responses}")
+        logging.info(f"Logging Metrics - Failed Responses: {self.failed_responses}")
+
+metrics = Metrics()

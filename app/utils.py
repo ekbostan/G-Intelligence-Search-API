@@ -6,6 +6,7 @@ import os
 import requests
 from dotenv import load_dotenv
 import logging
+import time
 
 load_dotenv()
 
@@ -58,47 +59,52 @@ def load_geojson_data(filepath):
         print(f"Error parsing GeoJSON file at {filepath}: {e}")
     return stations
 
-def find_nearest_station(location, stations, memcached_client):
+def find_nearest_station(location, stations, memcached_client, max_retries=3, retry_delay=0.5):
     location_key = hashlib.md5(json.dumps(location).encode()).hexdigest()
     lock_key = f"lock:{location_key}"
 
-    # Acquire a lock
-    if memcached_client.add(lock_key, "locked", time=10):
-        try:
-            # Check the cache
-            cached_result = memcached_client.get(location_key)
-            if cached_result:
-                return json.loads(cached_result)
+    for _ in range(max_retries):
 
-            # Calculate nearest station
-            nearest_station = None
-            min_distance = float('inf')
-            for station in stations:
-                station_location = (station['latitude'], station['longitude'])
-                distance = geodesic(location, station_location).miles
-                if distance < min_distance:
-                    min_distance = distance
-                    nearest_station = station
+        if memcached_client.add(lock_key, "locked", time=10):
+            try:
+                # Check the cache
+                cached_result = memcached_client.get(location_key)
+                if cached_result:
+                    return json.loads(cached_result)
 
-            result = {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [nearest_station['longitude'], nearest_station['latitude']]
-                },
-                "properties": {
-                    "name": nearest_station['name'],
-                    "distance_miles": min_distance
+                # Calculate nearest station
+                nearest_station = None
+                min_distance = float('inf')
+                for station in stations:
+                    station_location = (station['latitude'], station['longitude'])
+                    distance = geodesic(location, station_location).miles
+                    if distance < min_distance:
+                        min_distance = distance
+                        nearest_station = station
+
+                result = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [nearest_station['longitude'], nearest_station['latitude']]
+                    },
+                    "properties": {
+                        "name": nearest_station['name'],
+                        "distance_miles": min_distance
+                    }
                 }
-            }
-            # Serve the requested data from the cache reducing the load on the server
-            memcached_client.set(location_key, json.dumps(result), time=86400)
+                # Cache the result
+                memcached_client.set(location_key, json.dumps(result), time=86400)
+                return result
+            finally:
+                # Release the lock
+                memcached_client.delete(lock_key)
+        else:
+            # If lock not acquired, wait and retry
+            time.sleep(retry_delay)
 
-            return result
-        finally:
-            memcached_client.delete(lock_key)
-    else:
-        return None
+    logging.warning(f"Could not acquire lock for location {location} after {max_retries} attempts.")
+    return None
 
 def get_google_maps_directions(start, end, mode='walking', memcached_client=None):
     """
@@ -146,44 +152,41 @@ def setup_logging():
             logging.StreamHandler()
         ]
     )
-
-    # Separate Uvicorn's logging to use a different format
+    
     uvicorn_log_config = {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": {
-                "default": {
-                    "format": "%(asctime)s - %(levelname)s - %(message)s",
-                },
-                "uvicorn": {
-                    "format": "%(levelprefix)s %(message)s",
-                },
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s - %(levelname)s - %(message)s",
             },
-            "handlers": {
-                "default": {
-                    "formatter": "default",
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
-                },
-                "file": {
-                    "formatter": "default",
-                    "class": "logging.FileHandler",
-                    "filename": "app.log",
-                },
-                "uvicorn": {
-                    "formatter": "uvicorn",
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
-                },
+            "uvicorn": {
+                "format": "%(levelname)s - %(message)s",  # Remove levelprefix
             },
-            "loggers": {
-                "": {"handlers": ["default", "file"], "level": "INFO"},
-                "uvicorn": {"handlers": ["uvicorn", "file"], "level": "INFO", "propagate": False},
-                "uvicorn.error": {"handlers": ["default", "file"], "level": "INFO", "propagate": True},
-                "uvicorn.access": {"handlers": ["default", "file"], "level": "INFO", "propagate": False},
+        },
+        "handlers": {
+            "default": {
+                "formatter": "default",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
             },
-        }
+            "file": {
+                "formatter": "default",
+                "class": "logging.FileHandler",
+                "filename": "app.log",
+            },
+            "uvicorn": {
+                "formatter": "uvicorn",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+            },
+        },
+        "loggers": {
+            "": {"handlers": ["default", "file"], "level": "INFO"},
+            "uvicorn": {"handlers": ["uvicorn", "file"], "level": "INFO", "propagate": False},
+            "uvicorn.error": {"handlers": ["default", "file"], "level": "INFO", "propagate": True},
+            "uvicorn.access": {"handlers": ["default", "file"], "level": "INFO", "propagate": False},
+        },
+    }
 
     logging.config.dictConfig(uvicorn_log_config)
-
-setup_logging()
