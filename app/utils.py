@@ -14,10 +14,11 @@ def load_all_stations(septa_kml_path, dc_metro_geojson_path):
     try:
         septa_stations = load_kml_data(septa_kml_path)
         dc_metro_stations = load_geojson_data(dc_metro_geojson_path)
-        return septa_stations + dc_metro_stations
+        return septa_stations, dc_metro_stations
     except Exception as e:
-        print(f"Error loading stations: {e}")
-        return []
+        logging.error(f"Error loading stations: {e}")
+        return [], []
+
 
 def load_kml_data(filepath):
     stations = []
@@ -212,7 +213,7 @@ def load_outliers(file_path):
     return {}
 
 
-def is_distant_location(location, outliers, threshold=200):
+def is_distant_location(location, outliers, threshold=100):
     """
     Determine if a location is too distant from the closest outlier station.
     
@@ -234,3 +235,34 @@ def is_distant_location(location, outliers, threshold=200):
 def round_coordinates(location, precision=3):
     """Rounds the latitude and longitude to a given precision."""
     return (round(location[0], precision), round(location[1], precision))
+
+
+def determine_service_area(location, septa_stations, septa_outliers, dc_metro_stations, dc_metro_outliers):
+    """
+    Determine whether the location is closer to SEPTA or DC Metro and return corresponding stations and outliers.
+    
+    :param location: Tuple of (latitude, longitude) for the location to check.
+    :param septa_stations: List of SEPTA stations.
+    :param septa_outliers: Dictionary of SEPTA outliers.
+    :param dc_metro_stations: List of DC Metro stations.
+    :param dc_metro_outliers: Dictionary of DC Metro outliers.
+    :return: Tuple containing the stations list and outliers for the nearest service area.
+    """
+    septa_distance = min(
+        geodesic(location, (septa_outliers['northernmost']['latitude'], septa_outliers['northernmost']['longitude'])).miles,
+        geodesic(location, (septa_outliers['southernmost']['latitude'], septa_outliers['southernmost']['longitude'])).miles,
+        geodesic(location, (septa_outliers['easternmost']['latitude'], septa_outliers['easternmost']['longitude'])).miles,
+        geodesic(location, (septa_outliers['westernmost']['latitude'], septa_outliers['westernmost']['longitude'])).miles,
+    )
+
+    dc_metro_distance = min(
+        geodesic(location, (dc_metro_outliers['northernmost']['latitude'], dc_metro_outliers['northernmost']['longitude'])).miles,
+        geodesic(location, (dc_metro_outliers['southernmost']['latitude'], dc_metro_outliers['southernmost']['longitude'])).miles,
+        geodesic(location, (dc_metro_outliers['easternmost']['latitude'], dc_metro_outliers['easternmost']['longitude'])).miles,
+        geodesic(location, (dc_metro_outliers['westernmost']['latitude'], dc_metro_outliers['westernmost']['longitude'])).miles,
+    )
+
+    if septa_distance <= dc_metro_distance:
+        return septa_stations, septa_outliers
+    else:
+        return dc_metro_stations, dc_metro_outliers
