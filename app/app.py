@@ -12,7 +12,17 @@ import logging
 import uvicorn
 
 # Local application imports
-from utils import find_nearest_station, get_google_maps_directions, load_all_stations, setup_logging, load_outliers, is_distant_location, round_coordinates
+from utils import (
+    find_nearest_station, 
+    get_google_maps_directions, 
+    load_all_stations, 
+    setup_logging, 
+    load_outliers, 
+    is_distant_location, 
+    round_coordinates, 
+    determine_service_area
+)
+
 from security import authenticate, SecurityHeadersMiddleware
 from models import LocationRequest
 from cache import memcached_client
@@ -24,23 +34,26 @@ load_dotenv()
 setup_logging()
 
 try:
-    stations = load_all_stations(
+    septa_stations, dc_metro_stations = load_all_stations(
         '../SEPTARegionalRailStations2016/doc.kml',
         '../Metro_Stations_Regional.geojson'
     )
 except Exception as e:
     logging.error(f"Failed to load station data: {e}")
-    stations = []
+    septa_stations, dc_metro_stations = [], [] 
 
-outliers = load_outliers('../outermost_stations.json')
+septa_outliers = load_outliers('../septa_outermost_stations.json')
+dc_metro_outliers = load_outliers('../dc_metro_outermost_stations.json')
 
 
 app = FastAPI()
 
 # Middleware setup
 app.state.memcached_client = memcached_client
-app.state.outliers = outliers
-logging.info(f"Loaded outliers: {outliers}")
+app.state.septa_outliers = septa_outliers
+app.state.dc_metro_outliers = dc_metro_outliers
+logging.info(f"Loaded outliers for SEPTA: {septa_outliers}")
+logging.info(f"Loaded outliers for DC Metro: {dc_metro_outliers}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -61,11 +74,17 @@ async def nearest_station(request: LocationRequest):
     location_key = hashlib.sha256(json.dumps(rounded_location).encode('utf-8')).hexdigest()
 
     try:
+        # Determine the service area (SEPTA or DC Metro)
+        stations, outliers = determine_service_area(
+            rounded_location, septa_stations, septa_outliers, 
+            dc_metro_stations, dc_metro_outliers
+        )
+
         # Check if the location is too distant
-        is_distant, closest_outlier_key = is_distant_location(rounded_location, app.state.outliers)
+        is_distant, closest_outlier_key = is_distant_location(rounded_location, outliers)
         if is_distant:
             # Select the nearest outlier based on proximity
-            nearest_station_geojson = app.state.outliers[closest_outlier_key]
+            nearest_station_geojson = outliers[closest_outlier_key]
 
             response_data = {
                 "status": "success",
