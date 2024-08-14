@@ -12,7 +12,7 @@ import logging
 import uvicorn
 
 # Local application imports
-from utils import find_nearest_station, get_google_maps_directions, load_all_stations, setup_logging, load_outliers, is_distant_location
+from utils import find_nearest_station, get_google_maps_directions, load_all_stations, setup_logging, load_outliers, is_distant_location, round_coordinates
 from security import authenticate, SecurityHeadersMiddleware
 from models import LocationRequest
 from cache import memcached_client
@@ -57,12 +57,12 @@ app.middleware("http")(log_requests)
 async def nearest_station(request: LocationRequest):
 
     metrics.api_calls += 1 
-    location = (request.latitude, request.longitude)
-    location_key = hashlib.sha256(json.dumps(location).encode('utf-8')).hexdigest()
+    rounded_location = round_coordinates((request.latitude, request.longitude), precision=4)
+    location_key = hashlib.sha256(json.dumps(rounded_location).encode('utf-8')).hexdigest()
 
     try:
         # Check if the location is too distant
-        is_distant, closest_outlier_key = is_distant_location(location, app.state.outliers)
+        is_distant, closest_outlier_key = is_distant_location(rounded_location, app.state.outliers)
         if is_distant:
             # Select the nearest outlier based on proximity
             nearest_station_geojson = app.state.outliers[closest_outlier_key]
@@ -86,7 +86,7 @@ async def nearest_station(request: LocationRequest):
             metrics.cache_misses += 1  
 
             # Find the nearest station
-            nearest_station_geojson = find_nearest_station(location, stations, app.state.memcached_client)
+            nearest_station_geojson = find_nearest_station(rounded_location, stations, app.state.memcached_client)
 
             if nearest_station_geojson is None:
                 metrics.failed_responses += 1 
@@ -113,7 +113,7 @@ async def nearest_station(request: LocationRequest):
         if request.include_directions and not is_distant:
             directions = await run_in_threadpool(
                 get_google_maps_directions, 
-                location, 
+                rounded_location, 
                 nearest_station_geojson, 
                 'walking', 
                 app.state.memcached_client
@@ -132,7 +132,6 @@ async def nearest_station(request: LocationRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing your request."
         )
-
 
 
 if __name__ == "__main__":

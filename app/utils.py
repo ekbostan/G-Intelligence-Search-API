@@ -161,7 +161,7 @@ def setup_logging():
                 "format": "%(asctime)s - %(levelname)s - %(message)s",
             },
             "uvicorn": {
-                "format": "%(levelname)s - %(message)s",  # Remove levelprefix
+                "format": "%(levelname)s - %(message)s", 
             },
         },
         "handlers": {
@@ -229,3 +229,8 @@ def is_distant_location(location, outliers, threshold=200):
     }
     closest_outlier = min(distances, key=distances.get)
     return distances[closest_outlier] > threshold, closest_outlier
+
+
+def round_coordinates(location, precision=3):
+    """Rounds the latitude and longitude to a given precision."""
+    return (round(location[0], precision), round(location[1], precision))
