@@ -49,17 +49,23 @@ def find_outermost_stations(stations):
         "westernmost": westernmost
     }
 
+def save_outliers_to_json(file_path, data):
+    try:
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=4)
+        print(f"Outermost stations have been written to '{file_path}'.")
+    except Exception as e:
+        print(f"Error writing to file {file_path}: {e}")
+
 def main():
-    septa_stations = load_kml_data('/SEPTARegionalRailStations2016/doc.kml')
+    septa_stations = load_kml_data('../SEPTARegionalRailStations2016/doc.kml')
     dc_metro_stations = load_geojson_data('Metro_Stations_Regional.geojson')
-    all_stations = septa_stations + dc_metro_stations
 
-    outermost_stations = find_outermost_stations(all_stations)
+    septa_outermost_stations = find_outermost_stations(septa_stations)
+    dc_metro_outermost_stations = find_outermost_stations(dc_metro_stations)
 
-    with open('outermost_stations.json', 'w') as f:
-        json.dump(outermost_stations, f, indent=4)
-    
-    print("Outermost stations have been written to 'outermost_stations.json'.")
+    save_outliers_to_json('septa_outermost_stations.json', septa_outermost_stations)
+    save_outliers_to_json('dc_metro_outermost_stations.json', dc_metro_outermost_stations)
 
 if __name__ == "__main__":
     main()
