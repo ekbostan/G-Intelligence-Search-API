@@ -68,7 +68,7 @@ This API takes a geographical location and finds the nearest SEPTA Regional Rail
    ```bash
    curl -X POST http://127.0.0.1:8000/nearest_station \
        -H "Content-Type: application/json" \
-       -H "X-API-KEY: test_api_key_1" \
+       -H "X-API-KEY: [TEST_API_KEY]" \
        -d '{
          "latitude": 40.7128,
          "longitude": -74.0060,
@@ -205,7 +205,7 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
   ```bash
   curl -X POST http://3.86.237.39:8000/nearest_station \
   -H "Content-Type: application/json" \
-  -H "X-API-KEY: test_api_key_1" \
+  -H "X-API-KEY: [TEST_API_KEY]" \
   -d '{
     "latitude": 38.826454124031571,
     "longitude": -76.911466463474113,
