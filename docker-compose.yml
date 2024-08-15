@@ -1,0 +1,27 @@
+version: "3.7"
+
+services:
+  gisual-app:
+    image: ekbostan111/gisual-app:latest
+    ports:
+      - "8000:8000"
+    environment:
+      GOOGLE_MAPS_API_KEY: "AIzaSyANpD2JL9DrT0Guv18_dFh4AhzRE47rAhk"
+      MEMCACHED_HOST: "memcached-14950.c262.us-east-1-3.ec2.redns.redis-cloud.com"
+      MEMCACHED_PORT: "14950"
+      MEMCACHED_USERNAME: "mc-bpWMX"
+      MEMCACHED_PASSWORD: "hqSF6qRmPDQCb4BaMm9hbmbsrGrRQaWK"
+      MEMCACHED_USE_SSL: "True"
+      VALID_API_KEYS: "test_api_key_1,test_api_key_2"
+      SECRET_KEY: "supersecretkey123"
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+      restart_policy:
+        condition: on-failure
