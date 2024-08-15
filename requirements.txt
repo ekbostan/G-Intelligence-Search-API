@@ -10,7 +10,7 @@ click==8.1.7
 Deprecated==1.2.14
 exceptiongroup==1.2.2
 fastapi==0.112.0
-fastapi-limiter==0.1.6
+fastapi-limiter==0.1.5
 Flask==3.0.3
 Flask-Cors==4.0.1
 Flask-Inputs==1.0.0
