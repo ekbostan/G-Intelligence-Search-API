@@ -6,14 +6,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      GOOGLE_MAPS_API_KEY: "AIzaSyANpD2JL9DrT0Guv18_dFh4AhzRE47rAhk"
-      MEMCACHED_HOST: "memcached-14950.c262.us-east-1-3.ec2.redns.redis-cloud.com"
-      MEMCACHED_PORT: "14950"
-      MEMCACHED_USERNAME: "mc-bpWMX"
-      MEMCACHED_PASSWORD: "hqSF6qRmPDQCb4BaMm9hbmbsrGrRQaWK"
-      MEMCACHED_USE_SSL: "True"
-      VALID_API_KEYS: "test_api_key_1,test_api_key_2"
-      SECRET_KEY: "supersecretkey123"
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      MEMCACHED_HOST: ${MEMCACHED_HOST}
+      MEMCACHED_PORT: ${MEMCACHED_PORT}
+      MEMCACHED_USERNAME: ${MEMCACHED_USERNAME}
+      MEMCACHED_PASSWORD: ${MEMCACHED_PASSWORD}
+      MEMCACHED_USE_SSL: ${MEMCACHED_USE_SSL}
+      VALID_API_KEYS: ${VALID_API_KEYS}
+      SECRET_KEY: ${SECRET_KEY}
     deploy:
       replicas: 3
       resources:
