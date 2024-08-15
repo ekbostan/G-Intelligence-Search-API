@@ -183,25 +183,25 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
 
 ## Deployment Design
 
-- **Infrastructure**: 
+- **Infrastructure**:
   - AWS EC2 `t2.micro`
   - Amazon Linux 2
   - Docker & Docker Swarm
-- **Load Balancing**: 
+- **Load Balancing**:
   - Managed by Docker Swarm for even distribution across containers.
-- **Caching**: 
+- **Caching**:
   - Implemented using Memcached to reduce API load.
-- **Rate Limiting**: 
+- **Rate Limiting**:
   - Limits requests to prevent abuse.
-- **Environment Variables**: 
+- **Environment Variables**:
   - Managed securely to protect sensitive data.
-- **Monitoring**: 
+- **Monitoring**:
   - Logs and metrics collected for usage and performance analysis.
 
 ### Testing the Production Build
 
 - **API Endpoint**: Test with `curl`:
-  
+
   ```bash
   curl -X POST http://3.86.237.39:8000/nearest_station \
   -H "Content-Type: application/json" \
@@ -211,4 +211,4 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
     "longitude": -76.911466463474113,
     "include_directions": false
   }'
-
+  ```
