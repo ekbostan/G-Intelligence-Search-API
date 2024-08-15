@@ -13,7 +13,7 @@ fastapi==0.112.0
 fastapi-limiter==0.1.5
 Flask==3.0.3
 Flask-Cors==4.0.1
-Flask-Inputs==1.0.0
+Flask-Inputs==0.3.0
 Flask-Limiter==3.8.0
 future==1.0.0
 geographiclib==2.0
