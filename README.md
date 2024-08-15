@@ -209,6 +209,6 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
   -d '{
     "latitude": 38.826454124031571,
     "longitude": -76.911466463474113,
-    "include_directions": false
+    "include_directions": true
   }'
   ```
