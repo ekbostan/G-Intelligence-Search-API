@@ -194,9 +194,12 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
 - **Rate Limiting**:
   - Limits requests to prevent abuse.
 - **Environment Variables**:
-  - Managed securely to protect sensitive data.
+  - Managed securely to protect sensitive data using GitHub Secrets for CI/CD pipeline.
 - **Monitoring**:
   - Logs and metrics collected for usage and performance analysis.
+- **CI/CD Pipeline**:
+  - A GitHub Actions pipeline automates the build, test, and deployment processes, ensuring continuous integration and delivery. The pipeline securely manages environment variables and automates the deployment to the AWS EC2 instance.
+
 
 ### Testing the Production Build
 
