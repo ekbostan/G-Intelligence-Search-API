@@ -215,3 +215,7 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
     "include_directions": true
   }'
   ```
+![Untitled Diagram drawio (2)](https://github.com/user-attachments/assets/bdcb6224-52d4-4338-b2c6-8587b629b457)
+
+
+  
