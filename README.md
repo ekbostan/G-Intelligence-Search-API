@@ -157,9 +157,15 @@ This API takes a geographical location and finds the nearest SEPTA Regional Rail
 ### 6. Scalability for Millions of Requests
 
 - **Implementation**:
-  - **Caching and Database**: Used distributed cache to handle high traffic and prevent multiple searches of the same location.
-  - **Load Balancing**: Ideally implement load balancing stratgey mentioned above.
-  - **Asynchronous Processing**: Utilized FastAPI’s asynchronous capabilities to handle multiple requests effectively.
+  - **Caching & Database**: 
+    - Utilized Redis for distributed caching to handle high traffic and prevent multiple searches of the same location.
+    - If time allowed, adding a database to back up searches for distant locations could provide long-term storage and further reduce API calls.
+  - **Load Balancing**: 
+    - Implemented Docker Swarm's built-in load balancing for even distribution across containers.
+    - For future improvement, consider using AWS Elastic Load Balancer (ELB) with auto-scaling groups to dynamically adjust EC2 instances based on traffic load.
+  - **Asynchronous Processing**: 
+    - Leveraged FastAPI’s asynchronous capabilities to handle multiple requests concurrently, improving overall responsiveness and efficiency.
+
 
 ### 7. Protecting Against Malicious Users
 
