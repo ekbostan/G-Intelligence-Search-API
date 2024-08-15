@@ -44,7 +44,7 @@ python-binary-memcached==0.31.2
 python-dotenv==1.0.1
 python-multipart==0.0.9
 reddis==1.0.1
-redis==5.0.8
+==5.0.8
 referencing==0.35.1
 requests==2.32.3
 rich==13.7.1
