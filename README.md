@@ -190,7 +190,7 @@ For the purposes of this application and given the limit, I used an AWS EC2 `t2.
 - **Load Balancing**:
   - Managed by Docker Swarm for even distribution across containers.
 - **Caching**:
-  - Implemented using Memcached to reduce API load.
+  - Implemented using Memcached to reduce API load. Used for distributed caching to enhance performance and scalability.
 - **Rate Limiting**:
   - Limits requests to prevent abuse.
 - **Environment Variables**:
