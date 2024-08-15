@@ -9,7 +9,6 @@ setup_logging()
 async def limit_request_size(request: Request, call_next):
     max_request_size = 1048576  # 1 MB
     content_length = int(request.headers.get("content-length", 0))
-
     if content_length > max_request_size:
         raise HTTPException(status_code=413, detail="Request Entity Too Large")
 

@@ -11,6 +11,13 @@ import time
 load_dotenv()
 
 def load_all_stations(septa_kml_path, dc_metro_geojson_path):
+    """
+    Load SEPTA and DC Metro stations from KML and GeoJSON files.
+
+    :param septa_kml_path: Path to the SEPTA KML file.
+    :param dc_metro_geojson_path: Path to the DC Metro GeoJSON file.
+    :return: Tuple containing lists of SEPTA and DC Metro stations.
+    """
     try:
         septa_stations = load_kml_data(septa_kml_path)
         dc_metro_stations = load_geojson_data(dc_metro_geojson_path)
@@ -21,6 +28,12 @@ def load_all_stations(septa_kml_path, dc_metro_geojson_path):
 
 
 def load_kml_data(filepath):
+    """
+    Load station data from a KML file.
+
+    :param filepath: Path to the KML file.
+    :return: List of stations with name, longitude, and latitude.
+    """
     stations = []
     try:
         with open(filepath) as f:
@@ -40,6 +53,12 @@ def load_kml_data(filepath):
     return stations
 
 def load_geojson_data(filepath):
+    """
+    Load station data from a GeoJSON file.
+
+    :param filepath: Path to the GeoJSON file.
+    :return: List of stations with name, longitude, and latitude.
+    """
     stations = []
     try:
         with open(filepath, 'r') as f:
@@ -61,6 +80,16 @@ def load_geojson_data(filepath):
     return stations
 
 def find_nearest_station(location, stations, memcached_client, max_retries=3, retry_delay=0.5):
+    """
+    Find the nearest station to a given location and cache the result.
+
+    :param location: Tuple (latitude, longitude) of the user's location.
+    :param stations: List of station data.
+    :param memcached_client: Memcached client for caching.
+    :param max_retries: Maximum number of retries to acquire a cache lock.
+    :param retry_delay: Delay between retries if lock is not acquired.
+    :return: JSON object representing the nearest station.
+    """
     location_key = hashlib.md5(json.dumps(location).encode()).hexdigest()
     lock_key = f"lock:{location_key}"
 
